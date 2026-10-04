@@ -1,3 +1,8 @@
+
+<h1 align="center">🎧 SynthwavePlayer</h1> <p align="center"> A dual-deck DJ application in C++ with real-time audio DSP, built on the JUCE framework. </p> <p align="center"> <img alt="C++" src="https://img.shields.io/badge/C%2B%2B-14%2B-00599C?logo=c%2B%2B&logoColor=white"> <img alt="JUCE" src="https://img.shields.io/badge/JUCE-6%2F7-8A2BE2"> <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%20(Xcode)-lightgrey?logo=apple"> <img alt="License" src="https://img.shields.io/badge/license-educational%20%2F%20portfolio-blue"> </p> 
+
+<!-- Add a screenshot or short GIF here. This is the single most effective thing for a portfolio README. <p align="center"><img src="docs/demo.gif" alt="SynthwavePlayer demo" width="800"></p> -->
+
 # OOP JUCE Audio Player
 
 A desktop DJ application developed as part of the University of London Object-Oriented Programming module. The project explores object-oriented design, component-based GUI development, audio playback, and basic audio processing using C++ and JUCE.
