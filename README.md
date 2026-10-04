@@ -5,37 +5,9 @@
 
 # OOP JUCE Audio Player
 
-A desktop DJ application developed as part of the University of London Object-Oriented Programming module. The project explores object-oriented design, component-based GUI development, audio playback, and basic audio processing using C++ and JUCE.
-The app features dual audio decks, waveform visualization, playlist management, hot cues, a 3-band EQ, BPM detection, and persistent per-track settings.
+SynthwavePlayer lets you mix two tracks at once, much like a basic DJ rig. Each deck has its own playback controls, waveform view, 3-band EQ, hot cues and BPM readout. A shared library lets you send tracks to either deck, and your cues, EQ settings and library are saved and restored the next time you open the app.
 
-
-SynthWave DJ Player lets you mix two tracks at once, much like a basic DJ rig. Each deck has its own playback controls, waveform view, 3-band EQ, hot cues and BPM readout. A shared library lets you queue tracks onto either deck, and everything you do (cues, EQ, library) is persisted and restored the next time you open the app.
-
-The project was designed to practise real-time audio programming, clean separation between audio engine and UI, and robust persistence in C++.
-
-## Features
-# Dual DJ Decks
-- Two independent audio decks
-- Play and pause controls
-- Volume control
-- Playback position control
-- Playback speed adjustment
-- Load tracks independently into each deck
-- Shared audio mixer for simultaneous playback
-
-Playlist Management
-- Add multiple audio tracks to a library
-- Display:
--- Track title
--- Duration
--- Deck 1 / Deck 2 assignment
-- Persistent playlist library
-- Supports common audio formats including:
-.mp3
-.wav
-.aiff
-.flac
-.ogg
+It was built from the ground up, without a high-level player library, to explore real-time audio programming, DSP, and clean separation between audio engine, UI and persistence in C++.
 
 ## 🧩 OOP Concepts
 - Classes and objects
@@ -46,3 +18,42 @@ Playlist Management
 - Separation of responsibilities
 - Event-driven programming
 - Managing interactions between multiple objects
+
+## Features
+- **Real-time audio engine:** a custom `juce::AudioSource` chains file reading, transport, variable-rate sampling and DSP, and mixes two decks into one output.
+- **3-band EQ**:
+  - low shelf: 250 Hz
+  - mid shelf: 1 kHz
+  - high shelf: 5 kHz
+- **Variable-speed playback:** ranges between 0.5x to 2.0x for Resampling Audio Source
+- **BPM detection:** block-based RMS energy analysis with peak picking, scaled live by the playback speed.
+- **Hot cues:** set, jump and clear cue points, saved per track.
+Per-track memory: EQ and cues are keyed by file path and reapplied when a track is loaded again.
+- **Library:** multi-file import (`.mp3`, `.wav`, `.aiff`, `.flac`, `.ogg`) with title and duration, one-click loading into either deck, persisted between sessions.
+- **Waveform display:** `AudioThumbnail` waveform with a live playhead.
+- **Drag and drop**: drop an audio file onto a deck to load it.
+
+## Application Layout
+<img width="1025" height="588" alt="image" src="https://github.com/user-attachments/assets/c4f0a51b-cd72-426c-be8d-9491be6e77de" />
+
+## Dual DJ process breakdown
+<img width="570" height="615" alt="image" src="https://github.com/user-attachments/assets/8a97bbfd-f4fe-46d2-b386-288973ee184c" />
+
+| Class / File Pair | Category | Main Responsibilities | Key Interactions |
+| :--- | :--- | :--- | :--- |
+| **MainComponent.h** /<br>**MainComponent.cpp** | Application Controller | Initializes audio system, connects decks to mixer, manages audio device, coordinates major components | • DeckGUI<br>• DJAudioPlayer<br>• MixerAudioSource<br>• AudioDeviceManager |
+| **DeckGUI.h** /<br>**DeckGUI.cpp** | Deck Interface Controller | Handles deck UI, user interaction (buttons, sliders), loads tracks, communicates playback commands to audio player | • DJAudioPlayer<br>• WaveformDisplay<br>• CueManager<br>• EQManager |
+| **DJAudioPlayer.h** /<br>**DJAudioPlayer.cpp** | Audio Processing Engine | Loads audio files, controls playback, manages gain/speed/position, BPM analysis, processes audio blocks, applies DSP filters | • MixerAudioSource<br>• DeckGUI<br>• AudioFormatReaderSource |
+| **WaveformDisplay.h** /<br>**WaveformDisplay.cpp** | Audio Visualization Component | Renders waveform, displays playback position, visual feedback for track progress | • DeckGUI<br>• DJAudioPlayer<br>• AudioThumbnail |
+| **PlayListComponent.h** /<br>**PlayListComponent.cpp** | Playlist Manager UI | Displays music library, allows user to select tracks and load them into decks | • DeckGUI<br>• File system / library data |
+| **CueManager.h** /<br>**CueManager.cpp** | Cue Point Management Service | Handles cue creation, storage, retrieval, loads and saves cue profiles to CSV | • DeckGUI<br>• File system (`SynthWavePlayerCue.csv`) |
+| **EQManager.h** /<br>**EQManager.cpp** | Equalizer Profile Manager | Stores EQ settings, loads/saves EQ profiles, applies EQ parameters to the audio player | • DeckGUI<br>• DJAudioPlayer<br>• File system (`SynthWavePlayerEQ.csv`) |
+| **CueButton.h** /<br>**CueButton.cpp** *(if present)* | UI Control Component | Represents individual cue buttons, interacts with cue system to set/jump to cue points | • DeckGUI<br>• CueManager |
+| **LibraryManager.h** /<br>**LibraryManager.cpp** *(if present)* | Track Library Manager | Maintains track metadata, loads library from CSV, supports playlist UI | • PlayListComponent<br>• File system (`dj_library.csv`) |
+
+## Design notes
+
+- **Engine and UI are decoupled**. `DJAudioPlayer` knows nothing about widgets; DeckGUI only uses its public interface.
+- **Persistence lives in dedicated managers.** Each owns a `std::map` keyed by track path and syncs it to disk, keeping file `I/O` out of both the UI and the audio code.
+- **Component recycling is respected**. The playlist reuses row buttons in refreshComponentForCell, tagging them with a `row:column ID`, so scrolling stays cheap.
+- **RAII for resources**. Readers and sources are held in `std::unique_ptr`, and components use JUCE's leak detector.
