@@ -57,3 +57,98 @@ Per-track memory: EQ and cues are keyed by file path and reapplied when a track 
 - **Persistence lives in dedicated managers.** Each owns a `std::map` keyed by track path and syncs it to disk, keeping file `I/O` out of both the UI and the audio code.
 - **Component recycling is respected**. The playlist reuses row buttons in refreshComponentForCell, tagging them with a `row:column ID`, so scrolling stays cheap.
 - **RAII for resources**. Readers and sources are held in `std::unique_ptr`, and components use JUCE's leak detector.
+
+## Audio Signal Chain (Per deck)
+<img width="396" height="653" alt="image" src="https://github.com/user-attachments/assets/96ea12c4-ec19-4ab6-92be-c58364d88329" />
+
+## BPM detection
+
+## Directory structure
+
+AudioProject/
+    └── NewProject/
+        ├── NewProject.jucer
+        ├── Builds/
+        │   └── MacOSX/
+        │       ├── Info-App.plist
+        │       └── RecentFilesMenuTemplate.nib
+        ├── JuceLibraryCode
+        └── Source/
+            ├── CueStorage.cpp
+            ├── CueStorage.h
+            ├── DeckGUI.cpp
+            ├── DeckGUI.h
+            ├── DjAudioPlayer.cpp
+            ├── DjAudioPlayer.h
+            ├── EQStorage.cpp
+            ├── EQStorage.h
+            ├── Main.cpp
+            ├── MainComponent.cpp
+            ├── MainComponent.h
+            ├── PlayListComponent.cpp
+            ├── PlayListComponent.h
+            ├── WaveFormDisplay.cpp
+            └── WaveFormDisplay.h
+
+
+## Getting started
+
+**Prerequisites**: 
+- macOS with Xcode
+- JUCE (including the juce_dsp module) with the Projucer.
+
+bash
+``git clone https://github.com/YOUR_USERNAME/SynthwavePlayer.git
+cd SynthwavePlayer``
+
+1. Open SynthwavePlayer.jucer in the Projucer.
+2. Confirm juce_dsp is enabled under Modules.
+3. Generate the Xcode project (Debug and Release configurations are included).
+4. Build and run in Xcode.
+
+The project currently ships with an Xcode exporter only. Other platforms should work through other Projucer exporters but are untested.
+
+## Usage
+| Action | How |
+| :--- | :--- |
+| **Add tracks to the library** | **Add Tracks** (multi-select) |
+| **Load a deck** | **Play** in the Deck 1 / Deck 2 column, the deck's **LOAD** button, or drag and drop a file |
+| **Play / pause** | **PLAY** / **PAUSE** |
+| **Adjust sound** | Volume, speed and position sliders; **LOW** / **MID** / **HIGH** knobs |
+| **Set a hot cue** | Click an unlit **C#** button at the desired position |
+| **Jump to a hot cue** | Click a lit (pink) **C#** button |
+| **Clear cues** | **Reset Cues** |
+
+
+## Saved data
+| File | Location | Contents |
+| :--- | :--- | :--- |
+| **dj_library.csv** | Documents folder | Track paths and durations |
+| **SynthWavePlayerCue.csv** | Home folder | Hot cue positions per track (up to 8 slots) |
+| **SynthWavePlayerEQ.csv** | Home folder | Low / mid / high EQ and original values per track |
+
+The files are created automatically if missing. Delete them to reset the library, cues or EQ.
+
+## Roadmap
+
+Potential Roadmap
+
+ - Run BPM analysis on a background thread so loading never blocks the UI
+ - Make EQ updates thread-safe and smoothed (atomics or SmoothedValue) to avoid clicks
+ - More robust tempo detection (onset detection, autocorrelation, octave-error correction)
+ - Replace CSV with JSON or SQLite so file paths containing commas are handled correctly
+ - Restore saved cues when loading via the deck's LOAD button, and expose all 8 cue slots in the UI (currently 7 buttons)
+ - Unit tests for the storage managers and BPM analysis
+
+Feature ideas:
+
+ - Crossfader and master output meter
+ - Loop controls (4/8/16-bar) and beat-synced playback
+ - Beat-grid visualisation and waveform zoom
+ - Spectrum analyser
+ - Track search, sorting and playlist crates
+ - Metadata extraction
+ - Cue colour customisation
+ - Cross-platform packaging
+
+
